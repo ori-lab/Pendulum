@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pendulum Simulation & Divination</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js CDN for 2D/3D simulations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        canvas {
+            background-color: #ffffff;
+            border: 2px solid #cbd5e1;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            display: block;
+            width: 100%; /* Make canvas responsive */
+            max-width: 800px; /* Max width for larger screens */
+            height: auto; /* Maintain aspect ratio */
+            aspect-ratio: 16 / 9; /* Common aspect ratio for simulations */
+        }
+        .controls-container, .divination-container {
+            background-color: #ffffff;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+            width: 100%;
+            max-width: 800px;
+        }
+        .controls-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .control-group label {
+            font-weight: 600;
+            color: #4a5568;
+        }
+        .control-group input[type="range"] {
+            width: 100%;
+            -webkit-appearance: none;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 5px;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+        }
+        .control-group input[type="range"]:hover {
+            opacity: 1;
+        }
+        .control-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #4299e1;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .control-group input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #4299e1;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .value-display {
+            font-weight: 500;
+            color: #2d3748;
+        }
+        .divination-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .divination-container textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            resize: vertical;
+            min-height: 60px;
+            font-size: 1rem;
+        }
+        .divination-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .divination-buttons button {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .divination-buttons button:hover {
+            transform: translateY(-2px);
+        }
+        .divination-buttons .ask-button {
+            background-color: #48bb78; /* Green */
+            color: white;
+        }
+        .divination-buttons .ask-button:hover {
+            background-color: #38a169;
+        }
+        .divination-buttons .clear-button {
+            background-color: #e53e3e; /* Red */
+            color: white;
+        }
+        .divination-buttons .clear-button:hover {
+            background-color: #c53030;
+        }
+        #answerDisplay {
+            min-height: 40px;
+            background-color: #e2e8f0;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            border: 1px solid #cbd5e1;
+        }
+        .message-box button {
+            background-color: #4299e1;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .message-box button:hover {
+            background-color: #3182ce;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none; /* Hidden by default */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Pendulum Simulation</h1>
+
+    <canvas id="pendulumCanvas"></canvas>
+
+    <div class="controls-container">
+        <div class="control-group">
+            <label for="lengthSlider" class="text-sm">Length (m): <span id="lengthValue" class="value-display">1.0</span></label>
+            <input type="range" id="lengthSlider" min="0.1" max="5.0" step="0.1" value="1.0">
+        </div>
+        <div class="control-group">
+            <label for="massSlider" class="text-sm">Mass (kg): <span id="massValue" class="value-display">1.0</span></label>
+            <input type="range" id="massSlider" min="0.1" max="10.0" step="0.1" value="1.0">
+        </div>
+        <div class="control-group">
+            <label for="gravitySlider" class="text-sm">Gravity (m/s²): <span id="gravityValue" class="value-display">9.81</span></label>
+            <input type="range" id="gravitySlider" min="1.0" max="20.0" step="0.01" value="9.81">
+        </div>
+        <div class="control-group">
+            <label for="angleSlider" class="text-sm">Initial Angle (degrees): <span id="angleValue" class="value-display">90</span></label>
+            <input type="range" id="angleSlider" min="0" max="170" step="1" value="90">
+        </div>
+        <div class="control-group">
+            <label for="dampingSlider" class="text-sm">Damping: <span id="dampingValue" class="value-display">0.005</span></label>
+            <input type="range" id="dampingSlider" min="0.0" max="0.1" step="0.001" value="0.005">
+        </div>
+        <div class="control-group">
+            <button id="resetButton" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105">Reset</button>
+        </div>
+    </div>
+
+    <div class="divination-container">
+        <h2 class="text-xl font-bold text-gray-700">Ask the Pendulum</h2>
+        <textarea id="questionInput" placeholder="Type your yes/no/maybe question here..."></textarea>
+        <div class="divination-buttons">
+            <button id="askButton" class="ask-button">Ask Pendulum</button>
+            <button id="clearButton" class="clear-button">Clear</button>
+        </div>
+        <div id="answerDisplay" class="text-gray-700">Pendulum's answer will appear here.</div>
+    </div>
+
+    <!-- Custom Message Box -->
+    <div id="messageBox" class="message-box">
+        <p id="messageText" class="text-lg text-gray-800"></p>
+        <button id="messageBoxOk">OK</button>
+    </div>
+    <div id="overlay" class="overlay"></div>
+
+    <script>
+        // Function to show a custom message box
+        function showMessageBox(message) {
+            const messageBox = document.getElementById('messageBox');
+            const messageText = document.getElementById('messageText');
+            const overlay = document.getElementById('overlay');
+
+            messageText.textContent = message;
+            messageBox.style.display = 'flex';
+            overlay.style.display = 'block';
+
+            const okButton = document.getElementById('messageBoxOk');
+            okButton.onclick = () => {
+                messageBox.style.display = 'none';
+                overlay.style.display = 'none';
+            };
+        }
+
+        // Ensure the script runs after the DOM is fully loaded
+        window.onload = function() {
+            // Get the canvas element
+            const canvas = document.getElementById('pendulumCanvas');
+            // Create a Three.js renderer and set its size
+            const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+
+            // Create a scene
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xffffff); // White background for the scene
+
+            // Create an orthographic camera for 2D view
+            const aspectRatio = canvas.clientWidth / canvas.clientHeight;
+            const viewSize = 10; // Units for the height of the view
+            const camera = new THREE.OrthographicCamera(
+                -viewSize * aspectRatio / 2, // left
+                viewSize * aspectRatio / 2,  // right
+                viewSize / 2,                // top
+                -viewSize / 2,               // bottom
+                0.1,                         // near
+                100                          // far
+            );
+            camera.position.z = 5; // Position the camera slightly back
+
+            // Pendulum parameters
+            let L = parseFloat(document.getElementById('lengthSlider').value); // Length of the pendulum (m)
+            let m = parseFloat(document.getElementById('massSlider').value);   // Mass of the bob (kg)
+            let g = parseFloat(document.getElementById('gravitySlider').value); // Acceleration due to gravity (m/s^2)
+            let theta = (parseFloat(document.getElementById('angleSlider').value) * Math.PI / 180); // Initial angle (radians)
+            let omega = 0; // Initial angular velocity (rad/s)
+            let damping = parseFloat(document.getElementById('dampingSlider').value); // Damping factor
+
+            let timeStep = 0.016; // Approximately 60 FPS (1/60 seconds)
+
+            // Divination state variables
+            let isDivining = false;
+            let divinationTimeout = null;
+
+            // Three.js objects for the pendulum
+            // Pivot (fixed point at the top)
+            let pivotGeometry = new THREE.CircleGeometry(0.1, 32);
+            let pivotMaterial = new THREE.MeshBasicMaterial({ color: 0x4a5568 });
+            let pivot = new THREE.Mesh(pivotGeometry, pivotMaterial);
+            scene.add(pivot);
+
+            // Rod (connecting pivot to bob)
+            let rodGeometry = new THREE.BoxGeometry(0.05, 1, 0.05); // Unit length, will be scaled
+            let rodMaterial = new THREE.MeshBasicMaterial({ color: 0x718096 });
+            let rod = new THREE.Mesh(rodGeometry, rodMaterial);
+            // Position the rod so its top is at the pivot (0,0,0)
+            rod.geometry.translate(0, -0.5, 0); // Shift origin to the top center
+            scene.add(rod);
+
+            // Bob (the swinging weight)
+            let bobGeometry = new THREE.SphereGeometry(0.2, 32, 32);
+            let bobMaterial = new THREE.MeshBasicMaterial({ color: 0x4299e1 });
+            let bob = new THREE.Mesh(bobGeometry, bobMaterial);
+            scene.add(bob);
+
+            // Function to update pendulum visualization based on its state
+            function updatePendulumVisuals() {
+                // Calculate bob position relative to the pivot (0,0,0)
+                const x = L * Math.sin(theta);
+                const y = -L * Math.cos(theta); // Negative because canvas y-axis typically points down
+
+                // Update rod's scale and position
+                rod.scale.y = L; // Adjust the rod's length
+                rod.position.set(x / 2, y / 2, 0); // Rod's center is halfway between pivot and bob
+                rod.rotation.z = theta; // Rotate the rod around its center
+
+                // Update bob position
+                bob.position.set(x, y, 0);
+            }
+
+            // Function to update the camera's aspect ratio and projection matrix
+            function updateCameraAspectRatio() {
+                const newAspectRatio = canvas.clientWidth / canvas.clientHeight;
+                camera.left = -viewSize * newAspectRatio / 2;
+                camera.right = viewSize * newAspectRatio / 2;
+                camera.top = viewSize / 2;
+                camera.bottom = -viewSize / 2;
+                camera.updateProjectionMatrix();
+            }
+
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+                updateCameraAspectRatio();
+                renderer.render(scene, camera);
+            });
+
+            // Initial update of visuals
+            updatePendulumVisuals();
+
+            // Animation loop
+            function animate() {
+                requestAnimationFrame(animate);
+
+                // Simple pendulum differential equation: d^2(theta)/dt^2 = -(g/L) * sin(theta) - damping * omega
+                const alpha = -(g / L) * Math.sin(theta) - damping * omega; // Angular acceleration
+                omega += alpha * timeStep; // Update angular velocity
+                theta += omega * timeStep; // Update angle
+
+                updatePendulumVisuals();
+
+                renderer.render(scene, camera);
+            }
+
+            // Start the animation loop
+            animate();
+
+            // --- Control Handlers ---
+
+            const lengthSlider = document.getElementById('lengthSlider');
+            const lengthValue = document.getElementById('lengthValue');
+            lengthSlider.addEventListener('input', (e) => {
+                L = parseFloat(e.target.value);
+                lengthValue.textContent = L.toFixed(1);
+                updatePendulumVisuals(); // Recalculate positions
+            });
+
+            const massSlider = document.getElementById('massSlider');
+            const massValue = document.getElementById('massValue');
+            massSlider.addEventListener('input', (e) => {
+                m = parseFloat(e.target.value);
+                massValue.textContent = m.toFixed(1);
+                // Optionally, change bob size based on mass for visual feedback
+                bob.scale.setScalar(1 + (m - 1) * 0.05); // Scale bob slightly with mass
+            });
+
+            const gravitySlider = document.getElementById('gravitySlider');
+            const gravityValue = document.getElementById('gravityValue');
+            gravitySlider.addEventListener('input', (e) => {
+                g = parseFloat(e.target.value);
+                gravityValue.textContent = g.toFixed(2);
+            });
+
+            const angleSlider = document.getElementById('angleSlider');
+            const angleValue = document.getElementById('angleValue');
+            angleSlider.addEventListener('input', (e) => {
+                // Only allow angle slider to work if not in divination mode
+                if (!isDivining) {
+                    const newAngleDegrees = parseFloat(e.target.value);
+                    angleValue.textContent = newAngleDegrees;
+                    theta = newAngleDegrees * Math.PI / 180; // Convert to radians
+                    omega = 0; // Reset angular velocity when changing initial angle
+                    updatePendulumVisuals(); // Update position immediately
+                }
+            });
+
+            const dampingSlider = document.getElementById('dampingSlider');
+            const dampingValue = document.getElementById('dampingValue');
+            dampingSlider.addEventListener('input', (e) => {
+                damping = parseFloat(e.target.value);
+                dampingValue.textContent = damping.toFixed(3);
+            });
+
+            const resetButton = document.getElementById('resetButton');
+            resetButton.addEventListener('click', () => {
+                // Clear any ongoing divination
+                clearDivination();
+
+                // Reset all parameters to their initial values
+                L = 1.0;
+                m = 1.0;
+                g = 9.81;
+                theta = (90 * Math.PI / 180); // 90 degrees
+                omega = 0;
+                damping = 0.005;
+
+                // Update sliders and their displayed values
+                lengthSlider.value = L;
+                lengthValue.textContent = L.toFixed(1);
+                massSlider.value = m;
+                massValue.textContent = m.toFixed(1);
+                gravitySlider.value = g;
+                gravityValue.textContent = g.toFixed(2);
+                angleSlider.value = 90;
+                angleValue.textContent = 90;
+                dampingSlider.value = damping;
+                dampingValue.textContent = damping.toFixed(3);
+
+                // Reset bob scale
+                bob.scale.setScalar(1);
+
+                updatePendulumVisuals(); // Update visualization
+            });
+
+            // --- Divination Handlers ---
+            const questionInput = document.getElementById('questionInput');
+            const askButton = document.getElementById('askButton');
+            const answerDisplay = document.getElementById('answerDisplay');
+            const clearButton = document.getElementById('clearButton');
+
+            function clearDivination() {
+                questionInput.value = '';
+                answerDisplay.textContent = "Pendulum's answer will appear here.";
+                isDivining = false;
+                angleSlider.disabled = false; // Re-enable angle slider
+                askButton.disabled = false; // Re-enable ask button
+                if (divinationTimeout) {
+                    clearTimeout(divinationTimeout);
+                    divinationTimeout = null;
+                }
+                // Reset pendulum to default angle after clearing divination
+                theta = (90 * Math.PI / 180);
+                omega = 0;
+                updatePendulumVisuals();
+            }
+
+            askButton.addEventListener('click', () => {
+                const question = questionInput.value.trim();
+                if (question === '') {
+                    showMessageBox('Please enter a question before asking the pendulum.');
+                    return;
+                }
+
+                isDivining = true;
+                angleSlider.disabled = true; // Disable angle slider during divination
+                askButton.disabled = true; // Disable ask button during divination
+
+                // Clear any previous divination timeout
+                if (divinationTimeout) {
+                    clearTimeout(divinationTimeout);
+                }
+
+                // Determine the answer randomly for demonstration
+                const randomValue = Math.random();
+                let answerText = "";
+
+                if (randomValue < 0.33) {
+                    // Yes: Large swing
+                    theta = Math.PI / 2; // 90 degrees
+                    omega = 0;
+                    answerText = "Yes, the pendulum swings with a strong affirmation.";
+                } else if (randomValue < 0.66) {
+                    // No: Small swing
+                    theta = Math.PI / 10; // Approx 18 degrees
+                    omega = 0;
+                    answerText = "No, the pendulum indicates a negative response.";
+                } else {
+                    // Maybe: Medium swing with a slight initial wobble
+                    theta = Math.PI / 4; // 45 degrees
+                    omega = 0.5; // Small initial angular velocity for wobble
+                    answerText = "Maybe, the pendulum suggests an uncertain outcome or rephrasing.";
+                }
+
+                answerDisplay.textContent = answerText;
+                updatePendulumVisuals(); // Update pendulum to new initial state
+
+                // Set a timeout to re-enable controls after the "reading"
+                divinationTimeout = setTimeout(() => {
+                    isDivining = false;
+                    angleSlider.disabled = false; // Re-enable angle slider
+                    askButton.disabled = false; // Re-enable ask button
+                    divinationTimeout = null;
+                }, 8000); // Pendulum swings for 8 seconds before controls are re-enabled
+            });
+
+            clearButton.addEventListener('click', clearDivination);
+
+            // Initial camera aspect ratio update
+            updateCameraAspectRatio();
+        };
+    </script>
+</body>
+</html>
