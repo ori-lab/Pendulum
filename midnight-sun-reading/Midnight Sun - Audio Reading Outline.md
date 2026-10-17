@@ -56,7 +56,7 @@ Running time: about 55–65 minutes · Follows the PDF section by section, so th
 - The big three: Gemini Sun, Virgo Moon, Virgo rising.
 - **Mercury runs almost everything.** It rules the rising sign, the Midheaven, the Sun, the Moon and Jupiter. Few charts lean this hard on one planet.
 - The closed circle: Mercury lives in Venus's sign, Venus lives in the Moon's sign, and the Moon lives in Mercury's. No one planet gets the final word.
-- **No fire.** No planet sits in Aries, Leo or Sagittarius. Plant this early and come back to it in section 12.
+- **No fire.** No planet sits in Aries, Leo or Sagittarius. Plant this early and come back to it in section 13.
 - Born on Venus's day (Friday), in the hour of the Sun.
 
 ## 3. The Rising: Virgo, 23°49′ (4 min)
