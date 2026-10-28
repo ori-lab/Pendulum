@@ -7,11 +7,11 @@ Online pendulum for divination
 
 ### Four variations
 
-`poetry/variations.html` switches between four more sketches, each with its own vocabulary and motion:
+`poetry/variations.html` switches between four more sketches. Each has its own words, motion and soundscape (tap **sound** to start it), and each responds to touch or the mouse:
 
-- **Night Garden** (`garden.js`): words circle a lamp in four counter-rotating rings and drift toward the cursor.
-- **Rain Ledger** (`rain.js`): words fall like rain, bounce into lines, blow in the wind and get thrown up by loud sounds.
-- **Archive** (`archive.js`): stanzas type themselves out on paper, then scroll away; words near the cursor scramble in red ink.
-- **Star Chart** (`stars.js`): each line becomes a constellation; hovering lights it up and the bass makes the stars pulse.
+- **Night Garden** (`garden.js`): each line grows as a flowering plant, words as leaves and the last word as the blossom, with bell tones as they appear, crickets and fireflies. Touch brushes the plants aside.
+- **Rain Ledger** (`rain.js`): words fall like rain and settle into lines, each landing with a drip. Your finger is an umbrella; thunder throws the words back up.
+- **Archive** (`archive.js`): stanzas type themselves out with typewriter clicks and a bell at each line end, then roll away. Touching a word smudges it.
+- **Star Chart** (`stars.js`): each line is a constellation over a slow pad. Touch gathers the stars and plays their notes; tapping empty sky sends a shooting star.
 
-Each `.js` file is complete on its own, so it can be pasted into https://editor.p5js.org as is.
+Each `.js` file is complete on its own and needs only p5.js, so it can be pasted into https://editor.p5js.org as is.
