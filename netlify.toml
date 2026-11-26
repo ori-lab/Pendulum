@@ -1,0 +1,28 @@
+# Static site: no build step. The pendulum lives at the root,
+# The Cabinet at /cabinet/.
+[build]
+  publish = "."
+  command = "echo 'Static site, nothing to build'"
+
+# The service worker must always be fresh so app updates arrive.
+[[headers]]
+  for = "/cabinet/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/cabinet/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+
+# Netlify paths are case-sensitive; the pendulum page is Index.html (capital I),
+# so the site root would otherwise 404.
+[[redirects]]
+  from = "/"
+  to = "/Index.html"
+  status = 200
+
+[[redirects]]
+  from = "/index.html"
+  to = "/Index.html"
+  status = 200
