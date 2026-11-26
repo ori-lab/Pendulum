@@ -1,8 +1,9 @@
-# Static site: no build step. The pendulum lives at the root,
+# Static site. The "build" just copies the files into _site, which is the
+# folder this Netlify site is set to publish. The pendulum lives at the root,
 # The Cabinet at /cabinet/.
 [build]
-  publish = "."
-  command = "echo 'Static site, nothing to build'"
+  publish = "_site"
+  command = "mkdir -p _site && cp -R Index.html cabinet _site/ && echo 'Copied static files to _site'"
 
 # The service worker must always be fresh so app updates arrive.
 [[headers]]
