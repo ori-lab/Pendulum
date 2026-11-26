@@ -1,0 +1,29 @@
+# Static site. The "build" just copies the files into _site, which is the
+# folder this Netlify site is set to publish. The pendulum lives at the root,
+# The Cabinet at /cabinet/.
+[build]
+  publish = "_site"
+  command = "mkdir -p _site && cp -R Index.html cabinet _site/ && echo 'Copied static files to _site'"
+
+# The service worker must always be fresh so app updates arrive.
+[[headers]]
+  for = "/cabinet/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/cabinet/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+
+# Netlify paths are case-sensitive; the pendulum page is Index.html (capital I),
+# so the site root would otherwise 404.
+[[redirects]]
+  from = "/"
+  to = "/Index.html"
+  status = 200
+
+[[redirects]]
+  from = "/index.html"
+  to = "/Index.html"
+  status = 200
